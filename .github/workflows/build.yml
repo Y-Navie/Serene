@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: macOS
+          - os: windows-latest
+            name: Windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Upload VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serene-${{ matrix.name }}-VST3
+          path: build/Serene_artefacts/Release/VST3/
+
+      - name: Upload AU
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serene-macOS-AU
+          path: build/Serene_artefacts/Release/AU/
+
+      - name: Upload Standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serene-${{ matrix.name }}-Standalone
+          path: build/Serene_artefacts/Release/Standalone/
